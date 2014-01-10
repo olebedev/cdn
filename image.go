@@ -1,16 +1,17 @@
 package main
 
 import (
-	"code.google.com/p/graphics-go/graphics"
 	"fmt"
 	"image"
 	"image/jpeg"
 	"image/png"
 	"io"
+
+	"code.google.com/p/graphics-go/graphics"
 )
 
 // *** Crop given image file & write it to io.Writer
-func Crop(w io.Writer, r io.Reader, size []int) error {
+func crop(w io.Writer, r io.Reader, size []int) error {
 	if size == nil {
 		io.Copy(w, r)
 		return nil
@@ -54,7 +55,7 @@ func Crop(w io.Writer, r io.Reader, size []int) error {
 }
 
 // *** Resize given image file & write it to io.Writer
-func Resize(w io.Writer, r io.Reader, size []int) error {
+func resize(w io.Writer, r io.Reader, size []int) error {
 	if size == nil {
 		io.Copy(w, r)
 		return nil
@@ -81,9 +82,9 @@ func Resize(w io.Writer, r io.Reader, size []int) error {
 	wrat := float64(x) / float64(ib.Dx())
 	hrat := float64(y) / float64(ib.Dy())
 	if wrat <= hrat {
-		y = int(wrat * float64(y))
+		y = int(wrat * float64(ib.Dy()))
 	} else {
-		x = int(hrat * float64(x))
+		x = int(hrat * float64(ib.Dx()))
 	}
 
 	dst := image.NewRGBA(image.Rect(0, 0, x, y))

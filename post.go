@@ -41,6 +41,7 @@ func post(w http.ResponseWriter, req *http.Request) {
 	if slashIndex > 0 {
 		filename = filename[slashIndex+1:]
 	}
+
 	slashIndex = strings.LastIndex(filename, "/")
 	if slashIndex > 0 {
 		filename = filename[slashIndex+1:]
@@ -75,11 +76,10 @@ func post(w http.ResponseWriter, req *http.Request) {
 	file.SetContentType(mimeType)
 	file.Close()
 
-	__id, _ := file.Id().(bson.ObjectId)
-	_id := __id.Hex()
+	_id, _ := file.Id().(bson.ObjectId)
 
 	// json response
 	w.Write([]byte(
 		fmt.Sprintf("{\"error\":null,\"data\":{\"field\":\"%s\"}}",
-			fmt.Sprintf("%s/%s/%s", conf.Prefix, vars["coll"], _id))))
+			fmt.Sprintf("%s/%s/%s", conf.Prefix, vars["coll"], _id.Hex()))))
 }

@@ -43,7 +43,7 @@ func get(w http.ResponseWriter, req *http.Request) {
 
 	// check cache headers & response
 	tt := meta["uploadDate"].(time.Time)
-	fmt.Printf("GET /%s/%s (%s)\n", vars["coll"], vars["_id"], tt.Format(time.RFC822))
+	fmt.Printf("GET %s/%s/%s (%s) ", conf.Prefix, vars["coll"], vars["_id"], tt.Format(time.RFC822))
 
 	if h := req.Header.Get("If-Modified-Since"); h == tt.Format(time.RFC822) {
 		w.WriteHeader(http.StatusNotModified)
@@ -73,26 +73,26 @@ func get(w http.ResponseWriter, req *http.Request) {
 
 	// check to crop/resize
 	req.ParseForm()
-	crop, isCrop := req.Form["crop"]
-	resize, isResize := req.Form["resize"]
+	cr, isCrop := req.Form["crop"]
+	rsz, isResize := req.Form["resize"]
 
 	isIn := ^in([]string{"image/png", "image/jpeg"}, file.ContentType()) != 0
 
-	if isCrop && isIn && crop != nil {
-		parsed := parseParams(crop[0])
+	if isCrop && isIn && cr != nil {
+		parsed := parseParams(cr[0])
 		if parsed != nil {
-			fmt.Println("crop", parsed)
-			err = Crop(w, file, parsed)
+			err = crop(w, file, parsed)
+			fmt.Println("croped for:", parsed)
 			if err != nil {
 				fmt.Println("GET err:", err.Error())
 			}
 			return
 		}
-	} else if isResize && isIn && resize != nil {
-		parsed := parseParams(resize[0])
+	} else if isResize && isIn && rsz != nil {
+		parsed := parseParams(rsz[0])
 		if parsed != nil {
-			fmt.Println("resize", parsed)
-			err = Resize(w, file, parsed)
+			err = resize(w, file, parsed)
+			fmt.Println("resized for:", parsed)
 			if err != nil {
 				fmt.Println("GET err:", err.Error())
 			}

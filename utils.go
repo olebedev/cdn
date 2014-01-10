@@ -9,13 +9,15 @@ import (
 
 func savePid() {
 	if withPid := os.Getenv("WITH_PID"); len(withPid) > 0 {
-		fmt.Printf("Start with pid %d\n", os.Getpid())
-		outfile, err := os.Create(fmt.Sprintf("../%s", os.Getenv("WITH_PID")))
+		fmt.Printf("Start with pid %d.\n", os.Getpid())
+		outfile, err := os.Create(os.Getenv("WITH_PID"))
 		if err != nil {
 			panic(err)
 		}
 		outfile.Write([]byte(fmt.Sprintf("%d", os.Getpid())))
 		outfile.Close()
+	} else {
+		fmt.Printf("pid not found %s\n", os.Getenv("WITH_PID"))
 	}
 }
 
