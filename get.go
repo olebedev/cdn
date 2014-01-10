@@ -48,6 +48,7 @@ func get(w http.ResponseWriter, req *http.Request) {
 	if h := req.Header.Get("If-Modified-Since"); h == tt.Format(time.RFC822) {
 		w.WriteHeader(http.StatusNotModified)
 		w.Write([]byte("304 Not Modified"))
+		fmt.Println("304")
 		return
 	}
 
@@ -99,6 +100,7 @@ func get(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	} else {
+		fmt.Println("as is")
 		io.Copy(w, file)
 	}
 }
