@@ -16,7 +16,7 @@ restart:
 # $(tag) here will contain either `-1.0-` or just `-`
 ALL = \
 	$(foreach arch,32 64,\
-    $(foreach tag,-$(TAG)- -,\
+    $(foreach tag,-$(TAG)-,\
 	$(foreach suffix,win.exe linux osx,\
 		build/cdn$(tag)$(arch)-$(suffix))))
 
