@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -55,7 +57,6 @@ func get(w http.ResponseWriter, req *http.Request) {
 	// get file
 	file, err := conf.DB.GridFS(vars["coll"]).OpenId(_id)
 	if err != nil {
-		log.Fatal(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400 Bad Request"))
 		return
@@ -103,4 +104,51 @@ func get(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("as is")
 		io.Copy(w, file)
 	}
+}
+
+func getStat(w http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+
+	if len(req.Form) < 1 {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Сriteria not found!"))
+		return
+	}
+
+	// make query & ensure index for meta
+	vars := mux.Vars(req)
+	keys := []string{}
+	q := bson.M{}
+	for k, v := range req.Form {
+		key := fmt.Sprintf("metadata.%s", k)
+		value := strings.Join(v, "")
+		if len(value) > 0 {
+			keys = append(keys, key)
+			q[key] = value
+		}
+	}
+
+	// async ensure index
+	go func() {
+		if len(keys) > 0 {
+			conf.DB.C(vars["coll"] + ".files").EnsureIndexKey(keys...)
+		}
+	}()
+
+	pipe := conf.DB.C(vars["coll"] + ".files").Pipe([]bson.M{
+		{"$match": q},
+		{"$group": bson.M{
+			"_id": nil,
+			// "length":   bson.M{"$sum": 1},
+			"fileSize": bson.M{"$sum": "$length"},
+			"files":    bson.M{"$push": "$_id"},
+		}},
+	})
+
+	result := bson.M{}
+	pipe.One(&result)
+	w.WriteHeader(http.StatusOK)
+	bytes, _ := json.Marshal(result)
+	log.Print(result)
+	w.Write(bytes)
 }

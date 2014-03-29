@@ -74,6 +74,7 @@ func main() {
 
 	router := new(mux.Router)
 	router.HandleFunc(fmt.Sprintf("%s/{coll}", conf.Prefix), post).Methods("POST")
+	router.HandleFunc(fmt.Sprintf("%s/{coll}/stats-for", conf.Prefix), getStat).Methods("GET")
 	router.HandleFunc(fmt.Sprintf("%s/{coll}/{_id}", conf.Prefix), get).Methods("GET")
 
 	fmt.Printf("Start listening http at %d port.\n", conf.Port)
