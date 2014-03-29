@@ -18,23 +18,23 @@ ALL = \
 	$(foreach arch,32 64,\
     $(foreach tag,-$(TAG)- -,\
 	$(foreach suffix,win.exe linux osx,\
-		build/gostatic$(tag)$(arch)-$(suffix))))
+		build/cdn$(tag)$(arch)-$(suffix))))
 
-all: $(ALL)
+build: $(ALL)
 
 # os is determined as thus: if variable of suffix exists, it's taken, if not, then
 # suffix itself is taken
 win.exe = windows
 osx = darwin
-build/gostatic-$(TAG)-64-%: $(SOURCE)
+build/cdn-$(TAG)-64-%: $(SOURCE)
 	@mkdir -p $(@D)
 	CGO_ENABLED=0 GOOS=$(firstword $($*) $*) GOARCH=amd64 $(GOBUILD) -o $@
 
-build/gostatic-$(TAG)-32-%: $(SOURCE)
+build/cdn-$(TAG)-32-%: $(SOURCE)
 	@mkdir -p $(@D)
 	CGO_ENABLED=0 GOOS=$(firstword $($*) $*) GOARCH=386 $(GOBUILD) -o $@
 
-build/gostatic-%: build/gostatic-$(TAG)-%
+build/cdn-%: build/cdn-$(TAG)-%
 	@mkdir -p $(@D)
 	cd $(@D) && ln -sf $(<F) $(@F)
 
