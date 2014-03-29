@@ -33,6 +33,23 @@ It can crop/resize files with mimetypes `image/png` & `image/jpeg` in runtime(un
 `http://localhost:5000/test/51cc02851238546a10000003?resize=50x150`    
 `http://localhost:5000/test/51cc02851238546a10000003?resize=400x300`  
 
+You can push metadata with GET parameters like this:
+```bash
+$ curl -F field=@./me4.png "http://localhost:5000/test?uid=1&some_another_data=good"
+```
+and get stats for it:
+```bash
+$ curl "http://localhost:5000/test/stats-for?uid=1"
+{
+  "files": [
+    "53369266952b821ee7000003",
+    "533693cb952b821ee7000005"
+  ],
+  "fileSize": 23391867,
+  "_id": null
+}
+```
+
 Play with it.  
 __Enjoy  =)__
 
