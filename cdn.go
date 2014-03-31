@@ -1,20 +1,17 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/olebedev/config"
 	"labix.org/v2/mgo"
 )
 
-// *** Configuration
-type Config struct {
-	Port      int64
+type Settings struct {
+	Port      int
 	Prefix    string
 	MongoUri  string
 	MongoName string
@@ -22,49 +19,28 @@ type Config struct {
 	MaxSize   int
 }
 
-var conf = Config{
-	Port:      5000,
-	Prefix:    "",
-	MongoUri:  "localhost",
-	MongoName: "gotest",
-	MaxSize:   1000,
-}
+var conf = Settings{}
+
+var co, _ = config.ParseYaml(`
+port: 5000
+prefix: ""
+mongo:
+  uri: localhost
+  name: cdn
+maxSize: 1000
+`)
 
 func main() {
 	// write pid file
 	savePid()
+	// parse system env and then args
+	co.Env().Flag()
 
-	// get config vars from flags or ENV
-	if os.Getenv("PORT") != "" {
-		port, _ := strconv.ParseInt(os.Getenv("PORT"), 10, 16)
-		conf.Port = port
-	}
-	if os.Getenv("MONGO_URI") != "" {
-		conf.MongoUri = os.Getenv("MONGO_URI")
-	}
-	if os.Getenv("MONGO_NAME") != "" {
-		conf.MongoName = os.Getenv("MONGO_NAME")
-	}
-
-	if os.Getenv("PREFIX") != "" {
-		conf.Prefix = os.Getenv("PREFIX")
-	}
-
-	port := flag.Int64("port", conf.Port,
-		fmt.Sprintf("Specify a TCP/IP port number. Default is `%d`.", conf.Port))
-	prefix := flag.String("prefix", conf.Prefix,
-		fmt.Sprintf("Specify URI prefix. Default is `%s`.", conf.Prefix))
-	mongouri := flag.String("mongouri", conf.MongoUri,
-		fmt.Sprintf("Specify MONGOURI. Default is `%s`.", conf.MongoUri))
-	mongoname := flag.String("mongoname", conf.MongoName,
-		fmt.Sprintf("Specify MONGONAME. Default is `%s`.", conf.MongoName))
-
-	flag.Parse()
-
-	conf.Port = *port
-	conf.Prefix = *prefix
-	conf.MongoUri = *mongouri
-	conf.MongoName = *mongoname
+	conf.Port, _ = co.Int("port")
+	conf.Prefix, _ = co.String("prefix")
+	conf.MongoUri, _ = co.String("mongo.uri")
+	conf.MongoName, _ = co.String("mongo.name")
+	conf.MaxSize, _ = co.Int("maxSize")
 
 	sess, err := mgo.Dial(conf.MongoUri)
 	if err != nil {

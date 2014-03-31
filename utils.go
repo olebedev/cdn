@@ -16,8 +16,6 @@ func savePid() {
 		}
 		outfile.Write([]byte(fmt.Sprintf("%d", os.Getpid())))
 		outfile.Close()
-	} else {
-		fmt.Printf("pid not found %s\n", os.Getenv("WITH_PID"))
 	}
 }
 
