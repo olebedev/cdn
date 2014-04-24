@@ -1,4 +1,4 @@
-package main
+package cdn
 
 import (
 	"fmt"

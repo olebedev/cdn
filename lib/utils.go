@@ -1,23 +1,9 @@
-package main
+package cdn
 
 import (
-	"fmt"
-	"os"
 	"regexp"
 	"strconv"
 )
-
-func savePid() {
-	if withPid := os.Getenv("WITH_PID"); len(withPid) > 0 {
-		fmt.Printf("Start with pid %d.\n", os.Getpid())
-		outfile, err := os.Create(os.Getenv("WITH_PID"))
-		if err != nil {
-			panic(err)
-		}
-		outfile.Write([]byte(fmt.Sprintf("%d", os.Getpid())))
-		outfile.Close()
-	}
-}
 
 // it in list
 func in(list []string, a string) int {
@@ -42,7 +28,7 @@ func parseParams(s string) []int {
 	for i, item := range spl {
 		v, err := strconv.Atoi(item)
 		if err != nil {
-			fmt.Println(err.Error())
+			conf.Log.Println(err.Error())
 			continue
 		}
 		res[i] = v

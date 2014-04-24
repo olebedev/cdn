@@ -1,22 +1,19 @@
-package main
+package cdn
 
 import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/gorilla/mux"
+	"github.com/go-martini/martini"
 	"labix.org/v2/mgo/bson"
 )
 
-func get(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-
+func get(w http.ResponseWriter, req *http.Request, vars martini.Params) {
 	// validate _id
 	d, e := hex.DecodeString(vars["_id"])
 	if e != nil || len(d) != 12 {
@@ -24,6 +21,8 @@ func get(w http.ResponseWriter, req *http.Request) {
 		w.Write([]byte("400 Bad Request. Error: " + e.Error()))
 		return
 	}
+
+	vars["coll"] = conf.Prefix + vars["coll"]
 
 	// define main variables
 	_id := bson.ObjectIdHex(vars["_id"])
@@ -45,12 +44,12 @@ func get(w http.ResponseWriter, req *http.Request) {
 
 	// check cache headers & response
 	tt := meta["uploadDate"].(time.Time)
-	fmt.Printf("GET %s/%s/%s (%s) ", conf.Prefix, vars["coll"], vars["_id"], tt.Format(time.RFC822))
+	conf.Log.Printf("GET %s/%s/%s (%s) ", conf.Prefix, vars["coll"], vars["_id"], tt.Format(time.RFC822))
 
 	if h := req.Header.Get("If-Modified-Since"); h == tt.Format(time.RFC822) {
 		w.WriteHeader(http.StatusNotModified)
 		w.Write([]byte("304 Not Modified"))
-		fmt.Println("304")
+		conf.Log.Println("304")
 		return
 	}
 
@@ -68,7 +67,7 @@ func get(w http.ResponseWriter, req *http.Request) {
 	w.Header().Add("Last-Modified", file.UploadDate().Format(time.RFC822))
 	w.Header().Add("Cache-Control", "public, max-age=31536000")
 	w.Header().Add("Content-Type", file.ContentType())
-	// w.Header().Add("Content-Length", fmt.Sprintf("%d", file.Size()))
+	// w.Header().Add("Content-Length", conf.Log.Sprintf("%d", file.Size()))
 	if file.ContentType() == "application/octet-stream" {
 		w.Header().Add("Content-Disposition", "attachment; filename='"+file.Name()+"'")
 	}
@@ -84,9 +83,9 @@ func get(w http.ResponseWriter, req *http.Request) {
 		parsed := parseParams(cr[0])
 		if parsed != nil {
 			err = crop(w, file, parsed)
-			fmt.Println("croped for:", parsed)
+			conf.Log.Println("croped for:", parsed)
 			if err != nil {
-				fmt.Println("GET err:", err.Error())
+				conf.Log.Println("GET err:", err.Error())
 			}
 			return
 		}
@@ -94,19 +93,19 @@ func get(w http.ResponseWriter, req *http.Request) {
 		parsed := parseParams(rsz[0])
 		if parsed != nil {
 			err = resize(w, file, parsed)
-			fmt.Println("resized for:", parsed)
+			conf.Log.Println("resized for:", parsed)
 			if err != nil {
-				fmt.Println("GET err:", err.Error())
+				conf.Log.Println("GET err:", err.Error())
 			}
 			return
 		}
 	} else {
-		fmt.Println("as is")
+		conf.Log.Println("as is")
 		io.Copy(w, file)
 	}
 }
 
-func getStat(w http.ResponseWriter, req *http.Request) {
+func getStat(w http.ResponseWriter, req *http.Request, vars martini.Params) {
 	req.ParseForm()
 
 	if len(req.Form) < 1 {
@@ -115,8 +114,9 @@ func getStat(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	vars["coll"] = conf.Prefix + vars["coll"]
+
 	// make query & ensure index for meta
-	vars := mux.Vars(req)
 	keys := []string{}
 	q := bson.M{}
 	for k, v := range req.Form {
@@ -149,6 +149,6 @@ func getStat(w http.ResponseWriter, req *http.Request) {
 	pipe.One(&result)
 	w.WriteHeader(http.StatusOK)
 	bytes, _ := json.Marshal(result)
-	log.Print(result)
+	conf.Log.Print(result)
 	w.Write(bytes)
 }

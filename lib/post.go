@@ -1,4 +1,4 @@
-package main
+package cdn
 
 import (
 	"fmt"
@@ -7,13 +7,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gorilla/mux"
+	"github.com/go-martini/martini"
 	"labix.org/v2/mgo/bson"
 )
 
-func post(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-
+func post(w http.ResponseWriter, req *http.Request, vars martini.Params) {
 	formFile, formHead, err := req.FormFile("field")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -21,6 +19,8 @@ func post(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	defer formFile.Close()
+
+	vars["coll"] = conf.Prefix + vars["coll"]
 
 	//remove any directory names in the filename
 	//START: work around IE sending full filepath and manually get filename
@@ -82,5 +82,5 @@ func post(w http.ResponseWriter, req *http.Request) {
 	// json response
 	w.Write([]byte(
 		fmt.Sprintf("{\"error\":null,\"data\":{\"field\":\"%s\"}}",
-			fmt.Sprintf("%s/%s/%s", conf.Prefix, vars["coll"], _id.Hex()))))
+			fmt.Sprintf("%s/%s/%s/%s", conf.Prefix, vars["coll"], _id.Hex(), filename))))
 }
