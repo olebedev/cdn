@@ -80,5 +80,5 @@ func post(w http.ResponseWriter, req *http.Request, vars martini.Params) {
 	// json response
 	w.Write([]byte(
 		fmt.Sprintf("{\"error\":null,\"data\":{\"field\":\"%s\"}}",
-			fmt.Sprintf("%s/%s/%s/%s", conf.Prefix, vars["coll"], _id.Hex(), filename))))
+			fmt.Sprintf("%s/%s/%s", vars["coll"], _id.Hex(), filename))))
 }
