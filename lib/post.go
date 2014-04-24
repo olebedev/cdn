@@ -20,8 +20,6 @@ func post(w http.ResponseWriter, req *http.Request, vars martini.Params) {
 	}
 	defer formFile.Close()
 
-	vars["coll"] = conf.Prefix + vars["coll"]
-
 	//remove any directory names in the filename
 	//START: work around IE sending full filepath and manually get filename
 	itemHead := formHead.Header["Content-Disposition"][0]
@@ -49,7 +47,7 @@ func post(w http.ResponseWriter, req *http.Request, vars martini.Params) {
 	//END: work around IE sending full filepath
 
 	// GridFs actions
-	file, err := conf.DB.GridFS(vars["coll"]).Create(filename)
+	file, err := conf.DB.GridFS(conf.Prefix + vars["coll"]).Create(filename)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400 Bad Request"))

@@ -44,7 +44,7 @@ func get(w http.ResponseWriter, req *http.Request, vars martini.Params) {
 
 	// check cache headers & response
 	tt := meta["uploadDate"].(time.Time)
-	conf.Log.Printf("GET %s/%s/%s (%s) ", conf.Prefix, vars["coll"], vars["_id"], tt.Format(time.RFC822))
+	conf.Log.Printf("GET %s/%s (%s) ", vars["coll"], vars["_id"], tt.Format(time.RFC822))
 
 	if h := req.Header.Get("If-Modified-Since"); h == tt.Format(time.RFC822) {
 		w.WriteHeader(http.StatusNotModified)
