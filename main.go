@@ -10,16 +10,14 @@ import (
 	"os"
 )
 
-var conf, _ = config.ParseJson(`
-{
-  "port": 5000,
-  "prefix": "",
-  "maxSize": 1000,
-  "mongo":{
-    "uri": "localhost",
-    "name": "cdn"
-  }
-}
+var conf, _ = config.ParseYaml(`
+port: 5000
+maxSize: 1000
+showInfo: true
+tailOnly: false
+mongo:
+  uri: localhost
+  name: cdn
 `)
 
 func main() {
@@ -39,9 +37,11 @@ func main() {
 	logger := log.New(os.Stdout, "\x1B[36m[cdn] >>\x1B[39m ", 0)
 
 	fn := cdn.Cdn(cdn.Config{
-		DB:     db,
-		Prefix: conf.UString("prefix"),
-		Log:    logger,
+		DB:       db,
+		MaxSize:  conf.UInt("maxSize"),
+		ShowInfo: conf.UBool("showInfo"),
+		TailOnly: conf.UBool("tailOnly"),
+		Log:      logger,
 	})
 	fn(r)
 

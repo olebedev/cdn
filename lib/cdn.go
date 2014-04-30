@@ -8,10 +8,11 @@ import (
 )
 
 type Config struct {
-	Prefix  string
-	MaxSize int
-	DB      *mgo.Database
-	Log     *log.Logger
+	DB       *mgo.Database
+	Log      *log.Logger
+	MaxSize  int
+	TailOnly bool
+	ShowInfo bool
 }
 
 var conf Config
@@ -24,7 +25,7 @@ func Cdn(c Config) func(r martini.Router) {
 	}
 
 	if conf.DB == nil {
-		panic("cdn: MongoDB instance not found.")
+		panic("Cdn: MongoDB connection not found.")
 	}
 
 	if conf.Log == nil {
@@ -32,8 +33,11 @@ func Cdn(c Config) func(r martini.Router) {
 	}
 
 	return func(r martini.Router) {
+		if conf.ShowInfo {
+			r.Get("/:coll", getIndex)
+			r.Get("/:coll/_stats", getStat)
+		}
 		r.Post("/:coll", post)
-		r.Get("/:coll/stats-for", getStat)
 		r.Get("/:coll/:_id", get)
 		r.Get("/:coll/:_id/:file", get)
 	}

@@ -1,7 +1,7 @@
 package cdn
 
 import (
-	"fmt"
+	"encoding/json"
 	"io"
 	"mime"
 	"net/http"
@@ -47,7 +47,7 @@ func post(w http.ResponseWriter, req *http.Request, vars martini.Params) {
 	//END: work around IE sending full filepath
 
 	// GridFs actions
-	file, err := conf.DB.GridFS(conf.Prefix + vars["coll"]).Create(filename)
+	file, err := conf.DB.GridFS(vars["coll"]).Create(filename)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400 Bad Request"))
@@ -78,7 +78,14 @@ func post(w http.ResponseWriter, req *http.Request, vars martini.Params) {
 	_id, _ := file.Id().(bson.ObjectId)
 
 	// json response
-	w.Write([]byte(
-		fmt.Sprintf("{\"error\":null,\"data\":{\"field\":\"%s\"}}",
-			fmt.Sprintf("%s/%s/%s", vars["coll"], _id.Hex(), filename))))
+	field := "/" + _id.Hex() + "/" + filename
+	if !conf.TailOnly {
+		field = "/" + vars["coll"] + field
+	}
+
+	bytes, _ := json.Marshal(map[string]interface{}{
+		"error": nil,
+		"field": field,
+	})
+	w.Write(bytes)
 }
