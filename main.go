@@ -45,8 +45,8 @@ func main() {
 	})
 	fn(r)
 
-	logger.Println("Server started at http://localhost:" + conf.UString("port", "5000"))
-	_err := http.ListenAndServe("localhost:"+conf.UString("port", "5000"), m)
+	logger.Println("Server started at :" + conf.UString("port", "5000"))
+	_err := http.ListenAndServe(":"+conf.UString("port", "5000"), m)
 	if _err != nil {
 		logger.Printf("\x1B[31mServer exit with error: %s\x1B[39m\n", _err)
 		os.Exit(1)
