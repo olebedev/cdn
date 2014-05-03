@@ -19,7 +19,6 @@ var conf Config
 
 func Cdn(c Config) func(r martini.Router) {
 	conf = c
-	// Default value
 	if conf.MaxSize == 0 {
 		conf.MaxSize = 1000
 	}
