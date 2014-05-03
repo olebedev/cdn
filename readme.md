@@ -1,59 +1,175 @@
-## CDN over MongoDb GridFs written in Go.
-With crop/resize features. Also it support cache by _HTTP_ `Last-Modified` headers. 
+#CDN over MongoDb GridFs
 
-#### Install
+This utility can be used as stand alone _Content Delivery Network_, using _MongoDB GridFs_ as backend file storage. It can be builded from source code or installed as already compiled binaries.  
+ 
+Also it can be used as a thin file storage library for you projects, based on [martini](https://github.com/go-martini/martini) framework. For example, when you using one of the cloud platforms like _Heroku_, with ephemeral file system for application's instances and  should saving user's data.
 
-```bash
-$ go build
-```
-That's all. Now you have then binary file for you platform in the directory. Maybe you should install some packagers for succesful building.   
-After that you can start application like this: `./cdn`.
+## Features
 
-#### Usage
-Now. You are ready for upload files and get it.
-As an example let's send file `me4.png` from current directory: `$ curl -F field=@./me4.png http://localhost:5000/test`
-The response sould look like this:
-```json
+- on the fly crop and resize for `image/png` and `image/jpeg` _mimetypes_
+- cache strategy, based at _HTTP Last-Modified_ header
+- additional metadata for each files & aggregated statistic for it
+- forced _HTTP Content-Disposition_ header with file name, for download links(only if flag is specified, see below)
+- buckets(_MongoDB_ collections) as separation level
+- file listings for buckets, queried by metadata or without
+
+## Examples
+Let's assume that the process is already running and listening to default `http://localhost:5000`. 
+ 
+#### Uploading
+~~~ bash
+$ curl -F field=@./books.jpg http://localhost:5000/example
 {
   "error": null,
-  "data": {
-    "field":"/test/51cc02851238546a10000003"
-  }
+  "field":"/example/5364d634952b829316000001/books.jpg"
 }
-```
+~~~
+Uploading with metadata is realy simple - you only should specify it as _GET_ parameters for uploading _URL_:
+~~~ bash
+$ curl -F field=@./books.jpg "http://localhost:5000/example?userId=1&some_another_data=useful"
+...
+~~~
 
-where `data` is file _URI_.
+#### Getting
+As expected, the _URL_ for getting is:  
+`http://localhost:5000/example/5364d634952b829316000001/books.jpg`  
+or   
+`http://localhost:5000/example/5364d634952b829316000001`  
+That means that the filename is not necessary.  
+For forsed downloading specify `dl` _GET_ parameter:
+`http://localhost:5000/example/5364d634952b829316000001/books.jpg?dl`  
+In this case the file will not be previewed in the browser.
 
-#### Features
-It can crop/resize files with mimetypes `image/png` & `image/jpeg` in runtime(until without cache), specify get parameters for it:  
-`http://localhost:5000/test/51cc02851238546a10000003?crop=50`  
-`http://localhost:5000/test/51cc02851238546a10000003?crop=50x150`  
-`http://localhost:5000/test/51cc02851238546a10000003?crop=400x300`
-`http://localhost:5000/test/51cc02851238546a10000003?resize=50`    
-`http://localhost:5000/test/51cc02851238546a10000003?resize=50x150`    
-`http://localhost:5000/test/51cc02851238546a10000003?resize=400x300`  
+#### Crop and Resize images
+> This works only for files with mimetypes `image/png` & `image/jpeg`!
+> In another cases it feature will be ignored.
 
-You can push metadata with GET parameters like this:
-```bash
-$ curl -F field=@./me4.png "http://localhost:5000/test?uid=1&some_another_data=good"
-```
-and get stats for it:
-```bash
-$ curl "http://localhost:5000/test/stats-for?uid=1"
+Specify _GET_ parameters `crop` or `resize` for _URL_. Crop example:  
+`http://localhost:5000/example/5364d634952b829316000001/books.jpg?crop=500`  
+The value should contain one or two(separadet by one non-digit character) integer as width and height in pixels. If height is not specified, it will be used width value. For example, value `crop=500`  will be interpreted as `crop=500x500`.  
+
+`resize` parameter works the same way.
+
+#### Aggregation and the listing of files
+
+To get storage usage information in bytes, based on saved metadata, _GET_ it like this:
+~~~ bash
+$ http://localhost:5000/example/_stats?userId=1
 {
-  "files": [
-    "53369266952b821ee7000003",
-    "533693cb952b821ee7000005"
-  ],
-  "fileSize": 23391867,
-  "_id": null
+  "fileSize": 204789
 }
-```
+~~~  
+If metadata is not specified, it will be received usage information for whole bucket.
 
-Play with it.  
-__Enjoy  =)__
+To get the listing of files, based on saved metadata, _GET_ it like this:
+~~~ bash
+$ http://localhost:5000/example?userId=1
+[
+  "/5364d634952b829316000001/books.jpg"
+]
+~~~  
+If metadata is not specified, it will be received the listing of files for whole bucket.
 
-#### TODO:
+## Usage 
+As library for [martini](https://github.com/go-martini/martini) framework.
+
+~~~ bash
+$ go get github.com/olebedev/cdn
+~~~
+
+Simple `server.go` file:
+
+~~~ go
+package main
+
+import (
+	"log"
+	"net/http"
+	"os"
+	"github.com/go-martini/martini"
+	"github.com/olebedev/cdn/lib"
+	"labix.org/v2/mgo"
+)
+
+// Acceess handler
+func Access(res http.ResponseWriter, req *http.Request) {
+	// check session or something like this
+}
+
+// Set prefix for current collection name, of course, if need it
+// It useful when you store another data in one database
+func AutoPrefix(params martini.Params) {
+	// 'coll' - parameter name, which is used
+	params["coll"] = "cdn." + params["coll"]
+	// Ok. Now, cdn will work with this prefix for all collections
+}
+
+func main() {
+	m := martini.Classic()
+
+	session, err := mgo.Dial("localhost")
+	if err != nil {
+		panic(err)
+	}
+	session.SetMode(mgo.Monotonic, true)
+	db := session.DB("cdn")
+
+	logger := log.New(os.Stdout, "\x1B[36m[cdn] >>\x1B[39m ", 0)
+
+	m.Group("/uploads", 
+		cdn.Cdn(cdn.Config{
+			// MongoDB driver instance
+			DB:       db,
+			// Maximum width or height with pixels to crop or resize
+			// Useful to high performance
+			MaxSize:  1000,
+			// Show statictics and the listing of files
+			ShowInfo: true,
+			// If true it send URL whitout collection name, like this:
+			// {"field":"/5364d634952b829316000001/books.jpg", "error": null}
+			TailOnly: true,
+			// /dev/null, if  not specified
+			Log:      logger,
+		}),
+		// Access logic here
+		Access,
+		// On the fly prefix for collection
+		AutoPrefix,
+	)
+
+	logger.Println("Server started at :3000")
+	m.Run()
+}
+~~~
+Let's start it!
+~~~ bash
+$ go run server.go
+[cdn] >> Server started at :3000
+~~~
+
+That's all. Now you have started CDN at `http://localhost:3000/uploads/`.
+
+## Installation as stand alone
+
+If you build it from sources:
+~~~ bash
+$ go get github.com/olebedev/cdn
+~~~
+
+If you don't now what is _Golang_, check [releases](https://github.com/olebedev/cdn/releases) page and download binaries for your platform. Untar it and type this:  
+~~~ bash
+$ ./cdn --help
+Usage of ./cdn:
+  -maxSize="1000": 
+  -mongo.name="cdn": 
+  -mongo.uri="localhost": 
+  -port="5000": 
+  -showInfo="true": 
+  -tailOnly="false":
+~~~
+
+
+##### TODO:
 
 - handler for 206 HTTP Status for large file strimming
 - cache(save to GridFs croppped & resized image files)

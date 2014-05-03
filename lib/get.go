@@ -137,7 +137,7 @@ func getStat(w http.ResponseWriter, req *http.Request, vars martini.Params) {
 		{"$group": bson.M{
 			"_id":      nil,
 			"fileSize": bson.M{"$sum": "$length"},
-			"files":    bson.M{"$push": "$_id"},
+			// "files":    bson.M{"$push": "$_id"},
 		}},
 	})
 
