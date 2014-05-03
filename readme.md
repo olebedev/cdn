@@ -32,12 +32,18 @@ $ curl -F field=@./books.jpg "http://localhost:5000/example?userId=1&some_anothe
 
 #### Getting
 As expected, the _URL_ for getting is:  
-~~~ http://localhost:5000/example/5364d634952b829316000001/books.jpg ~~~
+~~~ bash
+http://localhost:5000/example/5364d634952b829316000001/books.jpg 
+~~~
 or   
-~~~ http://localhost:5000/example/5364d634952b829316000001~~~  
+~~~ bash
+http://localhost:5000/example/5364d634952b829316000001
+~~~  
 That means that the filename is not necessary.  
 For forsed downloading specify `dl` _GET_ parameter:
-~~~http://localhost:5000/example/5364d634952b829316000001/books.jpg?dl~~~  
+~~~ bash
+http://localhost:5000/example/5364d634952b829316000001/books.jpg?dl
+~~~  
 In this case the file will not be previewed in the browser.
 
 #### Crop and Resize images
@@ -45,7 +51,9 @@ In this case the file will not be previewed in the browser.
 > In another cases it feature will be ignored.
 
 Specify _GET_ parameters `crop` or `resize` for _URL_. Crop example:  
-~~~http://localhost:5000/example/5364d634952b829316000001/books.jpg?crop=500~~~  
+~~~ bash
+http://localhost:5000/example/5364d634952b829316000001/books.jpg?crop=500
+~~~  
 The value should contain one or two(separadet by one non-digit character) integer as width and height in pixels. If height is not specified, it will be used width value. For example, value `crop=500`  will be interpreted as `crop=500x500`.  
 
 `resize` parameter works the same way.
