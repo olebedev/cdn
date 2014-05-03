@@ -2,7 +2,7 @@
 
 This utility can be used as stand alone _Content Delivery Network_, using _MongoDB GridFs_ as backend file storage. It can be builded from source code or installed as already compiled binaries.  
  
-Also it can be used as a thin file storage library for you projects, based on [martini](https://github.com/go-martini/martini) framework. For example, when you using one of the cloud platforms like _Heroku_, with ephemeral file system for application's instances and  should saving user's data.
+Also it can be used as a thin file storage library for you projects, based on [martini](https://github.com/go-martini/martini) framework. For example, when you using one of the cloud platforms like _Heroku_, with ephemeral file system for application's instances and  you have to save user's data.
 
 ## Features
 
@@ -32,12 +32,12 @@ $ curl -F field=@./books.jpg "http://localhost:5000/example?userId=1&some_anothe
 
 #### Getting
 As expected, the _URL_ for getting is:  
-`http://localhost:5000/example/5364d634952b829316000001/books.jpg`  
+~~~ http://localhost:5000/example/5364d634952b829316000001/books.jpg ~~~
 or   
-`http://localhost:5000/example/5364d634952b829316000001`  
+~~~ http://localhost:5000/example/5364d634952b829316000001~~~  
 That means that the filename is not necessary.  
 For forsed downloading specify `dl` _GET_ parameter:
-`http://localhost:5000/example/5364d634952b829316000001/books.jpg?dl`  
+~~~http://localhost:5000/example/5364d634952b829316000001/books.jpg?dl~~~  
 In this case the file will not be previewed in the browser.
 
 #### Crop and Resize images
@@ -45,7 +45,7 @@ In this case the file will not be previewed in the browser.
 > In another cases it feature will be ignored.
 
 Specify _GET_ parameters `crop` or `resize` for _URL_. Crop example:  
-`http://localhost:5000/example/5364d634952b829316000001/books.jpg?crop=500`  
+~~~http://localhost:5000/example/5364d634952b829316000001/books.jpg?crop=500~~~  
 The value should contain one or two(separadet by one non-digit character) integer as width and height in pixels. If height is not specified, it will be used width value. For example, value `crop=500`  will be interpreted as `crop=500x500`.  
 
 `resize` parameter works the same way.
