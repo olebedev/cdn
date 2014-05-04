@@ -8,10 +8,11 @@ import (
 	"strings"
 
 	"github.com/go-martini/martini"
+	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 )
 
-func post(w http.ResponseWriter, req *http.Request, vars martini.Params) {
+func post(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo.Database) {
 	formFile, formHead, err := req.FormFile("field")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -47,7 +48,7 @@ func post(w http.ResponseWriter, req *http.Request, vars martini.Params) {
 	//END: work around IE sending full filepath
 
 	// GridFs actions
-	file, err := conf.DB.GridFS(vars["coll"]).Create(filename)
+	file, err := db.GridFS(vars["coll"]).Create(filename)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400 Bad Request"))

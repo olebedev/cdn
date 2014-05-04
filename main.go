@@ -24,6 +24,7 @@ func main() {
 	conf.Env().Flag()
 	r := martini.NewRouter()
 	m := martini.New()
+	// m.Use(martini.Logger())
 	m.MapTo(r, (*martini.Routes)(nil))
 	m.Action(r.Handle)
 
@@ -35,13 +36,13 @@ func main() {
 	db := session.DB(conf.UString("mongo.name"))
 
 	logger := log.New(os.Stdout, "\x1B[36m[cdn] >>\x1B[39m ", 0)
+	m.Map(logger)
+	m.Map(db)
 
 	fn := cdn.Cdn(cdn.Config{
-		DB:       db,
 		MaxSize:  conf.UInt("maxSize"),
 		ShowInfo: conf.UBool("showInfo"),
 		TailOnly: conf.UBool("tailOnly"),
-		Log:      logger,
 	})
 	fn(r)
 

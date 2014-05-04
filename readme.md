@@ -121,23 +121,21 @@ func main() {
 	}
 	session.SetMode(mgo.Monotonic, true)
 	db := session.DB("cdn")
+	m.Map(db)
 
 	logger := log.New(os.Stdout, "\x1B[36m[cdn] >>\x1B[39m ", 0)
+	m.Map(logger)
 
 	m.Group("/uploads", 
 		cdn.Cdn(cdn.Config{
-			// MongoDB driver instance
-			DB:       db,
 			// Maximum width or height with pixels to crop or resize
 			// Useful to high performance
 			MaxSize:  1000,
 			// Show statictics and the listing of files
 			ShowInfo: true,
-			// If true it send URL whitout collection name, like this:
+			// If true it send URL without collection name, like this:
 			// {"field":"/5364d634952b829316000001/books.jpg", "error": null}
 			TailOnly: true,
-			// /dev/null, if  not specified
-			Log:      logger,
 		}),
 		// Access logic here
 		Access,
@@ -159,7 +157,7 @@ That's all. Now you have started CDN at `http://localhost:3000/uploads/`.
 
 ## Installation as stand alone
 
-If you build it from sources:
+If you want to build it from sources:
 ~~~ bash
 $ go get github.com/olebedev/cdn
 ~~~

@@ -3,17 +3,18 @@ package cdn
 import (
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/go-martini/martini"
+	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 )
 
-func get(w http.ResponseWriter, req *http.Request, vars martini.Params) {
+func get(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo.Database, logger *log.Logger) {
 	// validate _id
 	d, e := hex.DecodeString(vars["_id"])
 	if e != nil || len(d) != 12 {
@@ -24,7 +25,7 @@ func get(w http.ResponseWriter, req *http.Request, vars martini.Params) {
 
 	// define main variables
 	_id := bson.ObjectIdHex(vars["_id"])
-	query := conf.DB.C(vars["coll"] + ".files").FindId(_id)
+	query := db.C(vars["coll"] + ".files").FindId(_id)
 	meta := bson.M{}
 	err := query.One(&meta)
 
@@ -42,17 +43,15 @@ func get(w http.ResponseWriter, req *http.Request, vars martini.Params) {
 
 	// check cache headers & response
 	tt := meta["uploadDate"].(time.Time)
-	conf.Log.Printf("GET %s/%s (%s) ", vars["coll"], vars["_id"], tt.Format(time.RFC822))
 
 	if h := req.Header.Get("If-Modified-Since"); h == tt.Format(time.RFC822) {
 		w.WriteHeader(http.StatusNotModified)
 		w.Write([]byte("304 Not Modified"))
-		conf.Log.Println("304")
 		return
 	}
 
 	// get file
-	file, err := conf.DB.GridFS(vars["coll"]).OpenId(_id)
+	file, err := db.GridFS(vars["coll"]).OpenId(_id)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400 Bad Request"))
@@ -66,7 +65,6 @@ func get(w http.ResponseWriter, req *http.Request, vars martini.Params) {
 	w.Header().Add("Last-Modified", file.UploadDate().Format(time.RFC822))
 	w.Header().Add("Cache-Control", "public, max-age=31536000")
 	w.Header().Add("Content-Type", file.ContentType())
-	// w.Header().Add("Content-Length", conf.Log.Sprintf("%d", file.Size()))
 	_, dl := req.Form["dl"]
 	if (file.ContentType() == "application/octet-stream") || dl {
 		w.Header().Add("Content-Disposition", "attachment; filename='"+file.Name()+"'")
@@ -79,45 +77,39 @@ func get(w http.ResponseWriter, req *http.Request, vars martini.Params) {
 	isIn := ^in([]string{"image/png", "image/jpeg"}, file.ContentType()) != 0
 
 	if isCrop && isIn && cr != nil {
-		parsed := parseParams(cr[0])
+		parsed, _ := parseParams(cr[0])
 		if parsed != nil {
 			err = crop(w, file, parsed)
-			conf.Log.Println("croped for:", parsed)
+			logger.Println("croped for:", parsed)
 			if err != nil {
-				conf.Log.Println("GET err:", err.Error())
+				logger.Println("GET err:", err.Error())
 			}
 			return
 		}
 	} else if isResize && isIn && rsz != nil {
-		parsed := parseParams(rsz[0])
+		parsed, _ := parseParams(rsz[0])
 		if parsed != nil {
 			err = resize(w, file, parsed)
-			conf.Log.Println("resized for:", parsed)
+			logger.Println("resized for:", parsed)
 			if err != nil {
-				conf.Log.Println("GET err:", err.Error())
+				logger.Println("GET err:", err.Error())
 			}
 			return
 		}
 	} else {
-		conf.Log.Println("as is")
+		logger.Println("as is")
 		io.Copy(w, file)
 	}
 }
 
-func getStat(w http.ResponseWriter, req *http.Request, vars martini.Params) {
+func getStat(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo.Database) {
 	req.ParseForm()
-
-	// if len(req.Form) < 1 {
-	// 	w.WriteHeader(http.StatusBadRequest)
-	// 	w.Write([]byte("Сriteria not found!"))
-	// 	return
-	// }
 
 	// make query & ensure index for meta
 	keys := []string{}
 	q := bson.M{}
 	for k, v := range req.Form {
-		key := fmt.Sprintf("metadata.%s", k)
+		key := "metadata." + k
 		value := strings.Join(v, "")
 		if len(value) > 0 {
 			keys = append(keys, key)
@@ -128,16 +120,15 @@ func getStat(w http.ResponseWriter, req *http.Request, vars martini.Params) {
 	// async ensure index
 	go func() {
 		if len(keys) > 0 {
-			conf.DB.C(vars["coll"] + ".files").EnsureIndexKey(keys...)
+			db.C(vars["coll"] + ".files").EnsureIndexKey(keys...)
 		}
 	}()
 
-	pipe := conf.DB.C(vars["coll"] + ".files").Pipe([]bson.M{
+	pipe := db.C(vars["coll"] + ".files").Pipe([]bson.M{
 		{"$match": q},
 		{"$group": bson.M{
 			"_id":      nil,
 			"fileSize": bson.M{"$sum": "$length"},
-			// "files":    bson.M{"$push": "$_id"},
 		}},
 	})
 
@@ -158,7 +149,7 @@ func (d Doc) Join() string {
 	return "/" + d.Id.Hex() + "/" + d.Filename
 }
 
-func getIndex(w http.ResponseWriter, req *http.Request, vars martini.Params) {
+func getIndex(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo.Database) {
 	req.ParseForm()
 	// make query & ensure index for meta
 	keys := []string{}
@@ -175,12 +166,12 @@ func getIndex(w http.ResponseWriter, req *http.Request, vars martini.Params) {
 	// async ensure index
 	go func() {
 		if len(keys) > 0 {
-			conf.DB.C(vars["coll"] + ".files").EnsureIndexKey(keys...)
+			db.C(vars["coll"] + ".files").EnsureIndexKey(keys...)
 		}
 	}()
 
 	result := []Doc{}
-	conf.DB.C(vars["coll"] + ".files").Find(q).All(&result)
+	db.C(vars["coll"] + ".files").Find(q).All(&result)
 	names := make([]string, len(result))
 	for i, _ := range names {
 		names[i] = result[i].Join()
