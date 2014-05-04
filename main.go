@@ -39,12 +39,11 @@ func main() {
 	m.Map(logger)
 	m.Map(db)
 
-	fn := cdn.Cdn(cdn.Config{
+	r.Group("", cdn.Cdn(cdn.Config{
 		MaxSize:  conf.UInt("maxSize"),
 		ShowInfo: conf.UBool("showInfo"),
 		TailOnly: conf.UBool("tailOnly"),
-	})
-	fn(r)
+	}))
 
 	logger.Println("Server started at :" + conf.UString("port", "5000"))
 	_err := http.ListenAndServe(":"+conf.UString("port", "5000"), m)

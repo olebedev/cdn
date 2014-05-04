@@ -76,24 +76,20 @@ func get(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo.
 
 	isIn := ^in([]string{"image/png", "image/jpeg"}, file.ContentType()) != 0
 
+	start := time.Now()
+
 	if isCrop && isIn && cr != nil {
 		parsed, _ := parseParams(cr[0])
 		if parsed != nil {
-			err = crop(w, file, parsed)
-			logger.Println("croped for:", parsed)
-			if err != nil {
-				logger.Println("GET err:", err.Error())
-			}
+			crop(w, file, parsed)
+			logger.Println("croped for:", parsed, time.Since(start))
 			return
 		}
 	} else if isResize && isIn && rsz != nil {
 		parsed, _ := parseParams(rsz[0])
 		if parsed != nil {
-			err = resize(w, file, parsed)
-			logger.Println("resized for:", parsed)
-			if err != nil {
-				logger.Println("GET err:", err.Error())
-			}
+			resize(w, file, parsed)
+			logger.Println("resized for:", parsed, time.Since(start))
 			return
 		}
 	} else {
