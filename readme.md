@@ -1,15 +1,15 @@
 #CDN over MongoDb GridFs
 
-This utility can be used as stand alone _Content Delivery Network_, using _MongoDB GridFs_ as backend file storage. It can be builded from source code or installed as already compiled binaries.  
+This utility can be used as stand alone _Content Delivery Network_, using _MongoDB GridFs_ as backend file storage. It can be built from source code or installed as already compiled binaries.  
  
-Also it can be used as a thin file storage library for you projects, based on [martini](https://github.com/go-martini/martini) framework. For example, when you using one of the cloud platforms like _Heroku_, with ephemeral file system for application's instances and  you have to save user's data.
+Also it can be used as a thin file storage library for your projects, based on [martini](https://github.com/go-martini/martini) framework. For example, when you use one of the cloud platforms like _Heroku_, with ephemeral file system for application's instances and  you have to save user's data.
 
 ## Features
 
 - on the fly crop and resize for `image/png` and `image/jpeg` _mimetypes_
-- cache strategy, based at _HTTP Last-Modified_ header
-- additional metadata for each files & aggregated statistic for it
-- forced _HTTP Content-Disposition_ header with file name, for download links(only if flag is specified, see below)
+- cache strategy, based on _HTTP Last-Modified_ header
+- additional metadata for each file & aggregated statistic for it
+- forced _HTTP Content-Disposition_ header with the file name, for download links(only if flag is specified, see below)
 - buckets(_MongoDB_ collections) as separation level
 - file listings for buckets, queried by metadata or without
 
@@ -54,7 +54,7 @@ Specify _GET_ parameters `crop` or `resize` for _URL_. Crop example:
 ~~~ bash
 http://localhost:5000/example/5364d634952b829316000001/books.jpg?crop=500
 ~~~  
-The value should contain one or two(separadet by one non-digit character) integer as width and height in pixels. If height is not specified, it will be used width value. For example, value `crop=500`  will be interpreted as `crop=500x500`.  
+The value should contain one or two(separated by one non-digit character) integer as width and height in pixels. If height is not specified, it will be used width value. For example, value `crop=500`  will be interpreted as `crop=500x500`.  
 
 `resize` parameter works the same way.
 
@@ -67,7 +67,7 @@ $ http://localhost:5000/example/_stats?userId=1
   "fileSize": 204789
 }
 ~~~  
-If metadata is not specified, it will be received usage information for whole bucket.
+If metadata is not specified, usage information will be received for the whole bucket.
 
 To get the listing of files, based on saved metadata, _GET_ it like this:
 ~~~ bash
@@ -76,7 +76,7 @@ $ http://localhost:5000/example?userId=1
   "/5364d634952b829316000001/books.jpg"
 ]
 ~~~  
-If metadata is not specified, it will be received the listing of files for whole bucket.
+If metadata is not specified, usage information will be received for the whole bucket.
 
 ## Usage 
 As library for [martini](https://github.com/go-martini/martini) framework.
@@ -164,7 +164,7 @@ If you want to build it from sources:
 $ go get github.com/olebedev/cdn
 ~~~
 
-If you don't now what is _Golang_, check [releases](https://github.com/olebedev/cdn/releases) page and download binaries for your platform. Untar it and type this:  
+If you don't know what is _Golang_, check [releases](https://github.com/olebedev/cdn/releases) page and download binaries for your platform. Untar it and type this:  
 ~~~ bash
 $ ./cdn --help
 Usage of ./cdn:
@@ -179,7 +179,7 @@ Usage of ./cdn:
 
 ##### TODO:
 
-- handler for 206 HTTP Status for large file strimming
+- handler for 206 HTTP Status for large file
 - cache(save to GridFs croppped & resized image files)
 
 
