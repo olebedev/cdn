@@ -83,8 +83,6 @@ As library for [martini](https://github.com/go-martini/martini) framework.
 
 ~~~ bash
 $ go get github.com/olebedev/cdn
-$ go get github.com/go-martini/martini
-$ go get labix.org/v2/mgo
 ~~~
 
 Simple `server.go` file:
