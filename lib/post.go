@@ -74,7 +74,7 @@ func post(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo
 
 	file.SetContentType(mimeType)
 	file.SetMeta(req.Form)
-	file.Close()
+	err = file.Close()
 
 	_id, _ := file.Id().(bson.ObjectId)
 
@@ -85,7 +85,7 @@ func post(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo
 	}
 
 	bytes, _ := json.Marshal(map[string]interface{}{
-		"error": nil,
+		"error": err,
 		"field": field,
 	})
 	w.Write(bytes)

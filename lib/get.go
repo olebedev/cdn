@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -14,7 +13,7 @@ import (
 	"labix.org/v2/mgo/bson"
 )
 
-func get(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo.Database, logger *log.Logger) {
+func get(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo.Database) {
 	// validate _id
 	d, e := hex.DecodeString(vars["_id"])
 	if e != nil || len(d) != 12 {
@@ -76,24 +75,19 @@ func get(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo.
 
 	isIn := ^in([]string{"image/png", "image/jpeg"}, file.ContentType()) != 0
 
-	start := time.Now()
-
 	if isCrop && isIn && cr != nil {
 		parsed, _ := parseParams(cr[0])
 		if parsed != nil {
 			crop(w, file, parsed)
-			logger.Println("croped for:", parsed, time.Since(start))
 			return
 		}
 	} else if isResize && isIn && rsz != nil {
 		parsed, _ := parseParams(rsz[0])
 		if parsed != nil {
 			resize(w, file, parsed)
-			logger.Println("resized for:", parsed, time.Since(start))
 			return
 		}
 	} else {
-		logger.Println("as is")
 		io.Copy(w, file)
 	}
 }
