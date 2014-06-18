@@ -51,6 +51,7 @@ func get(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo.
 
 	// get file
 	file, err := db.GridFS(vars["coll"]).OpenId(_id)
+	defer file.Close()
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400 Bad Request"))
