@@ -2,7 +2,9 @@ package cdn
 
 import (
 	"fmt"
+	"github.com/muesli/smartcrop"
 	"image"
+	"image/draw"
 	"image/jpeg"
 	"image/png"
 	"io"
@@ -10,66 +12,48 @@ import (
 	"code.google.com/p/graphics-go/graphics"
 )
 
-// *** Crop given image file & write it to io.Writer
-func crop(w io.Writer, r io.Reader, size []int) error {
-	if size == nil {
-		io.Copy(w, r)
-		return nil
-	}
-
-	img, mimetype, err := image.Decode(r)
-	if err != nil {
-		io.Copy(w, r)
-		return err
-	}
-
-	ib := img.Bounds()
-	// fit to actual size
-	var x, y int = ib.Dx(), ib.Dy()
-	if ib.Dx() >= size[0] {
-		x = size[0]
-	}
-	if ib.Dy() >= size[1] {
-		y = size[1]
-	}
-
-	// set max size
-	if conf.MaxSize <= x {
-		x = conf.MaxSize
-	}
-	if conf.MaxSize <= y {
-		y = conf.MaxSize
-	}
-
-	dst := image.NewRGBA(image.Rect(0, 0, x, y))
-	graphics.Thumbnail(dst, img)
-
+func writeByMimetype(w io.Writer, dst image.Image, mimetype string) error {
 	switch mimetype {
 	case "jpeg":
 		return jpeg.Encode(w, dst, &jpeg.Options{jpeg.DefaultQuality})
 	case "png":
 		return png.Encode(w, dst)
 	default:
-		return fmt.Errorf("Crop: mimetype '%s' can't be processed.", mimetype)
+		return fmt.Errorf("Mimetype '%s' can't be processed.", mimetype)
 	}
 }
 
-// *** Resize given image file & write it to io.Writer
-func resize(w io.Writer, r io.Reader, size []int) error {
-	if size == nil {
+// Smart crop given image file & write it to io.Writer
+func smartCrop(w io.Writer, r io.Reader, size []int) error {
+	img, mimetype, err := image.Decode(r)
+	if size == nil || err != nil {
 		io.Copy(w, r)
 		return nil
 	}
 
-	img, mimetype, err := image.Decode(r)
+	size = setMaxSize(fitToActualSize(&img, size))
+	crop, err := smartcrop.SmartCrop(&img, size[0], size[1])
 	if err != nil {
 		io.Copy(w, r)
-		return err
+		return nil
 	}
 
-	ib := img.Bounds()
+	croppedBuffer := image.NewRGBA(image.Rect(0, 0, crop.Width, crop.Height))
+	draw.Draw(
+		croppedBuffer,
+		croppedBuffer.Bounds(),
+		img,
+		image.Point{crop.X, crop.Y},
+		draw.Src,
+	)
 
-	// fit to actual size
+	dst := image.NewRGBA(image.Rect(0, 0, size[0], size[1]))
+	graphics.Scale(dst, croppedBuffer)
+	return writeByMimetype(w, dst, mimetype)
+}
+
+func fitToActualSize(img *image.Image, size []int) []int {
+	ib := (*img).Bounds()
 	var x, y int = ib.Dx(), ib.Dy()
 	if ib.Dx() >= size[0] {
 		x = size[0]
@@ -77,6 +61,48 @@ func resize(w io.Writer, r io.Reader, size []int) error {
 	if ib.Dy() >= size[1] {
 		y = size[1]
 	}
+
+	return []int{x, y}
+}
+
+func setMaxSize(size []int) []int {
+	if conf.MaxSize <= size[0] {
+		size[0] = conf.MaxSize
+	}
+	if conf.MaxSize <= size[1] {
+		size[1] = conf.MaxSize
+	}
+	return size
+}
+
+// Crop given image file & write it to io.Writer
+func crop(w io.Writer, r io.Reader, size []int) error {
+	img, mimetype, err := image.Decode(r)
+	if size == nil || err != nil {
+		io.Copy(w, r)
+		return nil
+	}
+
+	size = setMaxSize(fitToActualSize(&img, size))
+	dst := image.NewRGBA(image.Rect(0, 0, size[0], size[1]))
+	graphics.Thumbnail(dst, img)
+
+	return writeByMimetype(w, dst, mimetype)
+}
+
+// Resize given image file & write it to io.Writer
+func resize(w io.Writer, r io.Reader, size []int) error {
+	img, mimetype, err := image.Decode(r)
+	if size == nil || err != nil {
+		io.Copy(w, r)
+		return nil
+	}
+
+	ib := img.Bounds()
+
+	size = fitToActualSize(&img, size)
+	x := size[0]
+	y := size[1]
 
 	// set optimal thumbnail size
 	wrat := float64(x) / float64(ib.Dx())
@@ -90,12 +116,5 @@ func resize(w io.Writer, r io.Reader, size []int) error {
 	dst := image.NewRGBA(image.Rect(0, 0, x, y))
 	graphics.Thumbnail(dst, img)
 
-	switch mimetype {
-	case "jpeg":
-		return jpeg.Encode(w, dst, &jpeg.Options{jpeg.DefaultQuality})
-	case "png":
-		return png.Encode(w, dst)
-	default:
-		return fmt.Errorf("Resize: mimetype '%s' can't be processed.", mimetype)
-	}
+	return writeByMimetype(w, dst, mimetype)
 }

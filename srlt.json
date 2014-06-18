@@ -29,6 +29,12 @@
     "remote": "https://github.com/gorilla/mux",
     "commit": "9ede152210fa25c1377d33e867cb828c19316445"
   },
+  "github.com/muesli/smartcrop": {
+    "type": "git",
+    "name": "github.com/muesli/smartcrop",
+    "remote": "https://github.com/muesli/smartcrop",
+    "commit": "c41337febce9a5b529f993f71b4307e15c3d1f55"
+  },
   "labix.org/v2/mgo": {
     "type": "bzr",
     "name": "labix.org/v2/mgo",
