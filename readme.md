@@ -50,13 +50,15 @@ In this case the file will not be previewed in the browser.
 > This works only for files with mimetypes `image/png` & `image/jpeg`!
 > In another cases it feature will be ignored.
 
-Specify _GET_ parameters `crop` or `resize` for _URL_. Crop example:  
+Specify _GET_ parameters `crop`, `scrop` or `resize` for _URL_. Crop example:  
 ~~~ bash
 http://localhost:5000/example/5364d634952b829316000001/books.jpg?crop=500
 ~~~  
 The value should contain one or two(separated by one non-digit character) integer as width and height in pixels. If height is not specified, it will be used width value. For example, value `crop=500`  will be interpreted as `crop=500x500`.  
 
-`resize` parameter works the same way.
+`scrop`, `resize` parameter works the same way.  
+`scrop` - is _smart_ crop, based on [smartcrop](https://github.com/muesli/smartcrop) library.
+> WARNING! Smartcrop algorithm may take a long time.
 
 #### Aggregation and the listing of files
 
