@@ -3,7 +3,6 @@ package cdn
 import (
 	"encoding/json"
 	"io"
-	"mime"
 	"net/http"
 	"strings"
 
@@ -63,16 +62,11 @@ func post(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo
 		return
 	}
 
-	// guess mime type
-	extIndex := strings.LastIndex(filename, ".")
-	mimeType := "application/octet-stream"
-	if extIndex > 0 {
-		if t := mime.TypeByExtension(filename[extIndex:]); len(t) > 0 {
-			mimeType = t
-		}
-	}
+	b := make([]byte, 512)
+	formFile.Seek(0, 0)
+	formFile.Read(b)
 
-	file.SetContentType(mimeType)
+	file.SetContentType(http.DetectContentType(b))
 	file.SetMeta(req.Form)
 	err = file.Close()
 
