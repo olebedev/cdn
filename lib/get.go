@@ -13,6 +13,8 @@ import (
 	"labix.org/v2/mgo/bson"
 )
 
+const FORMAT = "Mon, _2 Jan 2006 15:04:05 GMT"
+
 func get(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo.Database) {
 	// validate _id
 	d, e := hex.DecodeString(vars["_id"])
@@ -43,7 +45,7 @@ func get(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo.
 	// check cache headers & response
 	tt := meta["uploadDate"].(time.Time)
 
-	if h := req.Header.Get("If-Modified-Since"); h == tt.Format(time.RFC822) {
+	if h := req.Header.Get("If-Modified-Since"); h == tt.Format(FORMAT) {
 		w.WriteHeader(http.StatusNotModified)
 		w.Write([]byte("304 Not Modified"))
 		return
@@ -61,8 +63,9 @@ func get(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo.
 	req.ParseForm()
 	w.Header().Add("Accept-Ranges", "bytes")
 	w.Header().Add("ETag", vars["_id"])
-	w.Header().Add("Date", file.UploadDate().Format(time.RFC822))
-	w.Header().Add("Last-Modified", file.UploadDate().Format(time.RFC822))
+	w.Header().Add("Date", file.UploadDate().Format(FORMAT))
+	w.Header().Add("Last-Modified", file.UploadDate().Format(FORMAT))
+	w.Header().Add("Expires", file.UploadDate().Add(87600*time.Hour).Format(FORMAT))
 	w.Header().Add("Cache-Control", "public, max-age=31536000")
 	w.Header().Add("Content-Type", file.ContentType())
 	_, dl := req.Form["dl"]
