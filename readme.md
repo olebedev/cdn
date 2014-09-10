@@ -179,7 +179,6 @@ Usage of ./cdn:
 
 ##### TODO:
 
-- fix date format(time.RFC822 to "Tue, 15 Nov 1994 08:12:31 GMT")
 - handler for 206 HTTP Status for large file
 - cache(save to GridFs croppped & resized image files)
 
