@@ -1,7 +1,6 @@
 package cdn
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -13,14 +12,12 @@ import (
 	"labix.org/v2/mgo/bson"
 )
 
-const FORMAT = "Mon, _2 Jan 2006 15:04:05 GMT"
+const FORMAT = "Mon, 2 Jan 2006 15:04:05 GMT"
 
 func get(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo.Database) {
 	// validate _id
-	d, e := hex.DecodeString(vars["_id"])
-	if e != nil || len(d) != 12 {
+	if !bson.IsObjectIdHex(vars["_id"]) {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("400 Bad Request. Error: " + e.Error()))
 		return
 	}
 
@@ -34,18 +31,33 @@ func get(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo.
 	if err != nil {
 		if err.Error() == "not found" {
 			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte("404 Not Found"))
 		} else {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("400 Bad Request. Error: " + err.Error()))
+			w.Write([]byte(err.Error()))
 		}
 		return
 	}
 
-	// check cache headers & response
-	tt := meta["uploadDate"].(time.Time)
+	uploadDate := meta["uploadDate"].(time.Time)
+	contentType := meta["contentType"].(string)
+	fileName := meta["filename"].(string)
 
-	if h := req.Header.Get("If-Modified-Since"); h == tt.Format(FORMAT) {
+	req.ParseForm()
+	head := w.Header()
+	head.Add("Accept-Ranges", "bytes")
+	head.Add("ETag", vars["_id"]+"+"+req.URL.RawQuery)
+	head.Add("Date", uploadDate.Format(FORMAT))
+	head.Add("Last-Modified", uploadDate.Format(FORMAT))
+	// Expires after ten years :)
+	head.Add("Expires", uploadDate.Add(87600*time.Hour).Format(FORMAT))
+	head.Add("Cache-Control", "public, max-age=31536000")
+	head.Add("Content-Type", contentType)
+	if _, dl := req.Form["dl"]; (contentType == "application/octet-stream") || dl {
+		head.Add("Content-Disposition", "attachment; filename='"+fileName+"'")
+	}
+
+	// already served
+	if h := req.Header.Get("If-None-Match"); h == vars["_id"]+"+"+req.URL.RawQuery {
 		w.WriteHeader(http.StatusNotModified)
 		w.Write([]byte("304 Not Modified"))
 		return
@@ -56,23 +68,9 @@ func get(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo.
 	defer file.Close()
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("400 Bad Request"))
+		w.Write([]byte(err.Error()))
 		return
 	}
-
-	req.ParseForm()
-	w.Header().Add("Accept-Ranges", "bytes")
-	w.Header().Add("ETag", vars["_id"])
-	w.Header().Add("Date", file.UploadDate().Format(FORMAT))
-	w.Header().Add("Last-Modified", file.UploadDate().Format(FORMAT))
-	w.Header().Add("Expires", file.UploadDate().Add(87600*time.Hour).Format(FORMAT))
-	w.Header().Add("Cache-Control", "public, max-age=31536000")
-	w.Header().Add("Content-Type", file.ContentType())
-	_, dl := req.Form["dl"]
-	if (file.ContentType() == "application/octet-stream") || dl {
-		w.Header().Add("Content-Disposition", "attachment; filename='"+file.Name()+"'")
-	}
-
 	// check to crop/resize
 	cr, isCrop := req.Form["crop"]
 	scr, isSCrop := req.Form["scrop"]
@@ -102,6 +100,7 @@ func get(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo.
 	} else {
 		io.Copy(w, file)
 	}
+
 }
 
 func getStat(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo.Database) {
