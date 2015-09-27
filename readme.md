@@ -1,5 +1,7 @@
 #CDN over MongoDb GridFs
 
+[![Join the chat at https://gitter.im/olebedev/cdn](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/olebedev/cdn?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 This utility can be used as stand alone _Content Delivery Network_, using _MongoDB GridFs_ as backend file storage. It can be built from source code or installed as already compiled binaries.  
  
 Also it can be used as a thin file storage library for your projects, based on [martini](https://github.com/go-martini/martini) framework. For example, when you use one of the cloud platforms like _Heroku_, with ephemeral file system for application's instances and  you have to save user's data.
