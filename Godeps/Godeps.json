@@ -1,0 +1,81 @@
+{
+	"ImportPath": "github.com/olebedev/cdn",
+	"GoVersion": "go1.6",
+	"GodepVersion": "v71",
+	"Deps": [
+		{
+			"ImportPath": "github.com/codegangsta/inject",
+			"Comment": "v1.0-rc1-10-g33e0aa1",
+			"Rev": "33e0aa1cb7c019ccc3fbe049a8262a6403d30504"
+		},
+		{
+			"ImportPath": "github.com/go-martini/martini",
+			"Comment": "v1.0-185-gc257c41",
+			"Rev": "c257c412d547ac70fcaf5596c1a50a7cb832c1fc"
+		},
+		{
+			"ImportPath": "github.com/muesli/smartcrop",
+			"Rev": "c41337febce9a5b529f993f71b4307e15c3d1f55"
+		},
+		{
+			"ImportPath": "github.com/olebedev/config",
+			"Rev": "dd1049a3738432dfc49417e2ae5bd97e132ecac6"
+		},
+		{
+			"ImportPath": "github.com/olebedev/graphics-go/graphics",
+			"Rev": "43898c463c663129c19e7b31ce2ed7ffa593fc8c"
+		},
+		{
+			"ImportPath": "github.com/olebedev/graphics-go/graphics/convolve",
+			"Rev": "43898c463c663129c19e7b31ce2ed7ffa593fc8c"
+		},
+		{
+			"ImportPath": "github.com/olebedev/graphics-go/graphics/interp",
+			"Rev": "43898c463c663129c19e7b31ce2ed7ffa593fc8c"
+		},
+		{
+			"ImportPath": "gopkg.in/mgo.v2",
+			"Comment": "r2016.08.01-1-g0108465",
+			"Rev": "01084657862d7b12d3b10ffd0394357abf8f8bc2"
+		},
+		{
+			"ImportPath": "gopkg.in/mgo.v2/bson",
+			"Comment": "r2016.08.01-1-g0108465",
+			"Rev": "01084657862d7b12d3b10ffd0394357abf8f8bc2"
+		},
+		{
+			"ImportPath": "gopkg.in/mgo.v2/internal/json",
+			"Comment": "r2016.08.01-1-g0108465",
+			"Rev": "01084657862d7b12d3b10ffd0394357abf8f8bc2"
+		},
+		{
+			"ImportPath": "gopkg.in/mgo.v2/internal/sasl",
+			"Comment": "r2016.08.01-1-g0108465",
+			"Rev": "01084657862d7b12d3b10ffd0394357abf8f8bc2"
+		},
+		{
+			"ImportPath": "gopkg.in/mgo.v2/internal/scram",
+			"Comment": "r2016.08.01-1-g0108465",
+			"Rev": "01084657862d7b12d3b10ffd0394357abf8f8bc2"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "a83829b6f1293c91addabc89d0571c246397bbf4"
+		},
+		{
+			"ImportPath": "labix.org/v2/mgo",
+			"Comment": "287",
+			"Rev": "gustavo@niemeyer.net-20140501184651-975yyw9ipld92pji"
+		},
+		{
+			"ImportPath": "labix.org/v2/mgo/bson",
+			"Comment": "287",
+			"Rev": "gustavo@niemeyer.net-20140501184651-975yyw9ipld92pji"
+		},
+		{
+			"ImportPath": "labix.org/v2/mgo/sasl",
+			"Comment": "287",
+			"Rev": "gustavo@niemeyer.net-20140501184651-975yyw9ipld92pji"
+		}
+	]
+}

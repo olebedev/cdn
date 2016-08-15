@@ -1,14 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 
+	mgo "gopkg.in/mgo.v2"
+
 	"github.com/go-martini/martini"
 	"github.com/olebedev/cdn/lib"
 	"github.com/olebedev/config"
-	"labix.org/v2/mgo"
 )
 
 var conf, _ = config.ParseYaml(`
@@ -18,13 +20,13 @@ maxSize: 1000
 showInfo: true
 tailOnly: false
 mongo:
-  uri: localhost
-mongodb:
-  database: cdn
+  url: localhost
 `)
 
 func main() {
 	conf.Env().Flag()
+	_c, _ := config.RenderYaml(conf.Root)
+	fmt.Println("start with config:\n", _c, "\n")
 	r := martini.NewRouter()
 	m := martini.New()
 	if conf.UBool("debug") {
@@ -33,12 +35,13 @@ func main() {
 	m.MapTo(r, (*martini.Routes)(nil))
 	m.Action(r.Handle)
 
-	session, err := mgo.Dial(conf.UString("mongo.uri"))
+	fmt.Println(mgo.ParseURL(conf.UString("mongo.url")))
+	session, err := mgo.Dial(conf.UString("mongo.url"))
 	if err != nil {
 		panic(err)
 	}
-	session.SetMode(mgo.Monotonic, true)
-	db := session.DB(conf.UString("mongodb.database"))
+	// session.SetMode(mgo.Monotonic, true)
+	db := session.DB("cdn")
 
 	logger := log.New(os.Stdout, "\x1B[36m[cdn] >>\x1B[39m ", 0)
 	m.Map(logger)

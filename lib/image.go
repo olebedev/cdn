@@ -2,14 +2,15 @@ package cdn
 
 import (
 	"fmt"
-	"github.com/muesli/smartcrop"
 	"image"
 	"image/draw"
 	"image/jpeg"
 	"image/png"
 	"io"
 
-	"code.google.com/p/graphics-go/graphics"
+	"github.com/muesli/smartcrop"
+
+	"github.com/olebedev/graphics-go/graphics"
 )
 
 func writeByMimetype(w io.Writer, dst image.Image, mimetype string) error {
