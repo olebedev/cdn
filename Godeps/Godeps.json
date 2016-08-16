@@ -7,18 +7,14 @@
 	],
 	"Deps": [
 		{
-			"ImportPath": "github.com/codegangsta/inject",
-			"Comment": "v1.0-rc1-10-g33e0aa1",
-			"Rev": "33e0aa1cb7c019ccc3fbe049a8262a6403d30504"
+			"ImportPath": "github.com/gorilla/context",
+			"Comment": "v1.1",
+			"Rev": "1ea25387ff6f684839d82767c1733ff4d4d15d0a"
 		},
 		{
-			"ImportPath": "github.com/go-martini/martini",
-			"Comment": "v1.0-185-gc257c41",
-			"Rev": "c257c412d547ac70fcaf5596c1a50a7cb832c1fc"
-		},
-		{
-			"ImportPath": "github.com/muesli/smartcrop",
-			"Rev": "c41337febce9a5b529f993f71b4307e15c3d1f55"
+			"ImportPath": "github.com/gorilla/mux",
+			"Comment": "v1.1-20-g7804150",
+			"Rev": "780415097119f6f61c55475fe59b66f3c3e9ea53"
 		},
 		{
 			"ImportPath": "github.com/olebedev/config",
@@ -64,21 +60,6 @@
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
 			"Rev": "a83829b6f1293c91addabc89d0571c246397bbf4"
-		},
-		{
-			"ImportPath": "labix.org/v2/mgo",
-			"Comment": "287",
-			"Rev": "gustavo@niemeyer.net-20140501184651-975yyw9ipld92pji"
-		},
-		{
-			"ImportPath": "labix.org/v2/mgo/bson",
-			"Comment": "287",
-			"Rev": "gustavo@niemeyer.net-20140501184651-975yyw9ipld92pji"
-		},
-		{
-			"ImportPath": "labix.org/v2/mgo/sasl",
-			"Comment": "287",
-			"Rev": "gustavo@niemeyer.net-20140501184651-975yyw9ipld92pji"
 		}
 	]
 }

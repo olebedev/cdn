@@ -6,12 +6,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-martini/martini"
-	"labix.org/v2/mgo"
-	"labix.org/v2/mgo/bson"
+	"gopkg.in/mgo.v2/bson"
+
+	"github.com/gorilla/mux"
 )
 
-func post(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo.Database) {
+func (c *Config) Post(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	db := c.Db
 	formFile, formHead, err := req.FormFile("field")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -70,11 +72,9 @@ func post(w http.ResponseWriter, req *http.Request, vars martini.Params, db *mgo
 	file.SetMeta(req.Form)
 	err = file.Close()
 
-	_id, _ := file.Id().(bson.ObjectId)
-
 	// json response
-	field := "/" + _id.Hex() + "/" + filename
-	if !conf.TailOnly {
+	field := "/" + file.Id().(bson.ObjectId).Hex() + "/" + filename
+	if !c.TailOnly {
 		field = "/" + vars["coll"] + field
 	}
 

@@ -3,12 +3,9 @@ package cdn
 import (
 	"fmt"
 	"image"
-	"image/draw"
 	"image/jpeg"
 	"image/png"
 	"io"
-
-	"github.com/muesli/smartcrop"
 
 	"github.com/olebedev/graphics-go/graphics"
 )
@@ -24,35 +21,6 @@ func writeByMimetype(w io.Writer, dst image.Image, mimetype string) error {
 	}
 }
 
-// Smart crop given image file & write it to io.Writer
-func smartCrop(w io.Writer, r io.Reader, size []int) error {
-	img, mimetype, err := image.Decode(r)
-	if size == nil || err != nil {
-		io.Copy(w, r)
-		return nil
-	}
-
-	size = setMaxSize(fitToActualSize(&img, size))
-	crop, err := smartcrop.SmartCrop(&img, size[0], size[1])
-	if err != nil {
-		io.Copy(w, r)
-		return nil
-	}
-
-	croppedBuffer := image.NewRGBA(image.Rect(0, 0, crop.Width, crop.Height))
-	draw.Draw(
-		croppedBuffer,
-		croppedBuffer.Bounds(),
-		img,
-		image.Point{crop.X, crop.Y},
-		draw.Src,
-	)
-
-	dst := image.NewRGBA(image.Rect(0, 0, size[0], size[1]))
-	graphics.Scale(dst, croppedBuffer)
-	return writeByMimetype(w, dst, mimetype)
-}
-
 func fitToActualSize(img *image.Image, size []int) []int {
 	ib := (*img).Bounds()
 	var x, y int = ib.Dx(), ib.Dy()
@@ -66,25 +34,25 @@ func fitToActualSize(img *image.Image, size []int) []int {
 	return []int{x, y}
 }
 
-func setMaxSize(size []int) []int {
-	if conf.MaxSize <= size[0] {
-		size[0] = conf.MaxSize
+func setMaxSize(max int, size []int) []int {
+	if max <= size[0] {
+		size[0] = max
 	}
-	if conf.MaxSize <= size[1] {
-		size[1] = conf.MaxSize
+	if max <= size[1] {
+		size[1] = max
 	}
 	return size
 }
 
 // Crop given image file & write it to io.Writer
-func crop(w io.Writer, r io.Reader, size []int) error {
+func crop(w io.Writer, r io.Reader, max int, size []int) error {
 	img, mimetype, err := image.Decode(r)
 	if size == nil || err != nil {
 		io.Copy(w, r)
 		return nil
 	}
 
-	size = setMaxSize(fitToActualSize(&img, size))
+	size = setMaxSize(max, fitToActualSize(&img, size))
 	dst := image.NewRGBA(image.Rect(0, 0, size[0], size[1]))
 	graphics.Thumbnail(dst, img)
 
